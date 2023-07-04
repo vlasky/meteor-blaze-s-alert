@@ -91,6 +91,7 @@ sAlert = {
         //     success: '/beep-success.mp3',
         //     warning: '/beep-warning.mp3'
         // }
+        onOpen: null,
         onClose: _.noop
     },
     config: function (configObj) {
