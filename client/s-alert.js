@@ -30,10 +30,10 @@ var sAlertClose = function (alertId) {
     var closingTimeout;
     var onClose;
     var alertObj;
-    var invokeOnCloseCb = function () {
+    var invokeOnCloseCb = function (data) {
         // invoke onClose callback
         if (onClose && _.isFunction(onClose)) {
-            onClose();
+            onClose(data);
         }
     };
     if (document.hidden || document.webkitHidden || !$('#' + alertId).hasClass('s-alert-is-effect')) {
@@ -42,7 +42,7 @@ var sAlertClose = function (alertId) {
             onClose = alertObj.onClose;
         }
         sAlert.collection.remove(alertId);
-        invokeOnCloseCb();
+        invokeOnCloseCb(alertObj);
     } else {
         $('.s-alert-box#' + alertId).removeClass('s-alert-show');
         closingTimeout = Meteor.setTimeout(function () {
@@ -105,7 +105,7 @@ sAlert = {
         sAlert.collection.find({}).forEach(function (sAlertObj) {
             sAlert.collection.remove(sAlertObj._id);
             if (sAlertObj.onClose && _.isFunction(sAlertObj.onClose)) {
-                sAlertObj.onClose();
+                sAlertObj.onClose(sAlertObj);
             }
         });
     },
