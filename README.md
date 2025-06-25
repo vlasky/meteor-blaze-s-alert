@@ -1,25 +1,27 @@
-### Simple and fancy notifications for Meteor
+### Simple and fancy notifications for Meteor with Blaze
 
-- Website: [http://s-alert.meteor.com/](http://s-alert.meteor.com/)
-- Demo: [http://s-alert-demo.meteor.com/](http://s-alert-demo.meteor.com/)
-- [s-Alert on the Meteor Podcast](http://www.meteorpodcast.com/e/episode-60-the-club-edition/)
-- [How to use it with React](http://julian.io/how-to-use-the-meteor-salert-package-with-react/)
+**This is a fork of [juliancwirko:s-alert](https://github.com/juliancwirko/meteor-s-alert) v3.1.2**
+
+#### Fork Information
+- **Package**: `vlasky:blaze-s-alert` v3.3.0
+- **GitHub**: [https://github.com/vlasky/meteor-blaze-s-alert/](https://github.com/vlasky/meteor-blaze-s-alert/)
+- **Purpose**: Add Meteor 3.0 support while maintaining Meteor 2.0 compatibility
+- **Name change**: From `s-alert` to `blaze-s-alert` to clarify this is for Blaze templating (Meteor now supports multiple view layers)
+- **Key enhancement**: All effect CSS files are now bundled in this single package for convenience
+
+#### Original Package Resources
+- Website: [https://s-alert.meteorapp.com/](https://s-alert.meteorapp.com/)
+- Demo: [https://s-alert-demo.meteorapp.com/](https://s-alert-demo.meteorapp.com/)
+- [s-Alert on the Meteor Podcast](https://www.meteorpodcast.com/e/episode-60-the-club-edition/)
+- [Pure React UI Component](https://www.npmjs.com/package/react-s-alert)
 
 ### sAlert Usage
 
 Add package:
 
-    meteor add juliancwirko:s-alert
+    meteor add vlasky:blaze-s-alert
 
-Optionally, add one or more effects:
-
-    meteor add juliancwirko:s-alert-scale
-    meteor add juliancwirko:s-alert-slide
-    meteor add juliancwirko:s-alert-genie
-    meteor add juliancwirko:s-alert-jelly
-    meteor add juliancwirko:s-alert-flip
-    meteor add juliancwirko:s-alert-bouncyflip
-    meteor add juliancwirko:s-alert-stackslide
+**Note**: All effects are now included in the main package. You don't need to add separate effect packages.
 
 Then place `{{> sAlert}}` in your main template. Recomended usage:
 
@@ -63,7 +65,7 @@ Meteor.startup(function () {
 });
 ```
 
-sAlert is based on a [client-only collection](http://docs.meteor.com/#/full/mongo_collection). It is called `sAlert.collection`. Every sAlert method returns the ID of the alert it has just created.
+sAlert is based on a [client-only collection](https://docs.meteor.com/api/collections). It is called `sAlert.collection`. Every sAlert method returns the ID of the alert it has just created.
 
 ```js
 var warningThatWeWantToCloseLater = sAlert.warning('Please register', {timeout: 'none'});
@@ -109,13 +111,14 @@ This particular error will be displayed in different way.
 
 #### Available effects:
 
-- scale - `meteor add juliancwirko:s-alert-scale`
-- slide - `meteor add juliancwirko:s-alert-slide`
-- genie - `meteor add juliancwirko:s-alert-genie`
-- jelly - `meteor add juliancwirko:s-alert-jelly`
-- flip - `meteor add juliancwirko:s-alert-flip`
-- bouncyflip - `meteor add juliancwirko:s-alert-bouncyflip`
-- stackslide - `meteor add juliancwirko:s-alert-stackslide`
+All effects are included in the main package:
+- scale
+- slide
+- genie
+- jelly
+- flip
+- bouncyflip
+- stackslide
 
 #### Available positions:
 
@@ -191,6 +194,54 @@ You can set up your audio 'beeps'. Just configure your audio file path (.mp3 is 
 
 **There is no default audio sample in the package.** You should use sound samples which you know that you have the right to use it.
 
+#### onOpen callback
+
+You can provide an `onOpen` callback function that will be called when an alert is rendered. This is useful for performing actions after the alert DOM is ready, such as:
+- Adding event handlers to HTML elements within alerts
+- Initializing third-party components
+- Setting focus on specific elements
+- Tracking analytics events
+- Maintaining Content Security Policy (CSP) compliance by avoiding inline handlers
+
+The `onOpen` function receives a data object containing the alert's data, including the alert's DOM id (`data._id`).
+
+```js
+sAlert.info('Click <button id="my-button">here</button>', {
+    html: true,
+    onOpen: function(data) {
+        // Use data._id to find the alert element
+        var alertElement = document.getElementById(data._id);
+        var button = alertElement.querySelector('#my-button');
+        if (button) {
+            button.addEventListener('click', function() {
+                console.log('Button clicked!');
+                sAlert.close(data._id);
+            });
+        }
+    }
+});
+```
+
+#### onClose callback
+
+The `onClose` callback function is called when an alert is closed. In this fork, it now receives a data object containing information about the alert being closed, making it easier to implement custom closing behavior for specific alerts.
+
+```js
+sAlert.info('Important notification', {
+    onClose: function(data) {
+        // data object contains the alert's information
+        console.log('Alert closed:', data._id);
+        console.log('Alert message was:', data.message);
+        
+        // Perform custom actions based on the specific alert
+        if (data.customField) {
+            // Handle special cleanup or tracking
+        }
+    },
+    customField: 'trackingId123'
+});
+```
+
 ### CSS styling
 
 You can override all CSS classes by targeting `s-alert-{{alertType}}.s-alert-effect-{{effectType}}`. The alert type classes are:
@@ -235,7 +286,7 @@ If you want to have your effect package linked here just let me know.
 Here is a default template (it will be included when you use the standard `{{> sAlert}}`):
 
 ```handlebars
-<div class="s-alert-box s-alert-{{condition}} s-alert-{{position}} s-alert-effect-{{effect}} s-alert-show" id="{{_id}}" style="{{boxPosition}}">
+<div class="s-alert-box s-alert-{{condition}} s-alert-{{position}} {{#if effect}}s-alert-is-effect s-alert-effect-{{effect}}{{/if}} s-alert-show" id="{{_id}}" style="{{boxPosition}}">
     <div class="s-alert-box-inner">
         <p>{{message}}</p>
     </div>
@@ -248,7 +299,7 @@ If you want to owerwrite it you should remember to be careful with all used help
 
 ```handlebars
 <template name="sAlertCustom">
-    <div class="custom-alert-class s-alert-box s-alert-{{condition}} s-alert-{{position}} s-alert-effect-{{effect}} s-alert-show" id="{{_id}}" style="{{boxPosition}}">
+    <div class="custom-alert-class s-alert-box s-alert-{{condition}} s-alert-{{position}} {{#if effect}}s-alert-is-effect s-alert-effect-{{effect}}{{/if}} s-alert-show" id="{{_id}}" style="{{boxPosition}}">
         <div class="s-alert-box-inner">
             <div class="alert-header">
                 <h1><i class="fa fa-{{sAlertIcon}}"></i> {{sAlertTitle}}</h1>
@@ -281,7 +332,7 @@ You can pass as many fields as you like. Remember to add the corresponding helpe
 
 Clone it into `packages` folder and run meteor with:
 ```
-meteor test-packages --driver-package respondly:test-reporter juliancwirko:s-alert
+meteor test-packages --driver-package practicalmeteor:mocha vlasky:blaze-s-alert
 ```
 
 and go to:
@@ -294,26 +345,25 @@ http://localhost:3000
 
 #### Inspiration:
 
-- [Codrops Article - Notification Styles Inspiration](http://tympanus.net/codrops/2014/07/23/notification-styles-inspiration/)
+- [Codrops Article - Notification Styles Inspiration](https://tympanus.net/codrops/2014/07/23/notification-styles-inspiration/)
 
 Thanks a lot for those who report bugs and request changes (especially [@dandv](https://github.com/dandv)). sAlert keeps getting better.
 
 #### Also check out:
 
+- [React with Webpack + Meteor as a backend only](http://julian.io/react-with-webpack-meteor-as-a-backend/)
+- [s-alert for React](https://www.npmjs.com/package/react-s-alert)
 - [sGrid](https://atmospherejs.com/juliancwirko/s-grid)
 - [sId](https://atmospherejs.com/juliancwirko/s-id)
 - [sImageBox](https://atmospherejs.com/juliancwirko/s-image-box)
+- [sChat - Open Source Live Chat App](https://www.simplechat.support)
 - [Scotty Boilerplate](https://github.com/juliancwirko/scotty)
 - [PostCSS for Meteor](https://atmospherejs.com/juliancwirko/postcss)
 
-**Note: Starting with version 3.0.0 old deprecated APIs are removed**
-
-**Note: Starting with version 2.0.0 you should also choose and add and effect package.**
-This is a more flexible and lean solution (previously, the effects CSS file contained all effect styles and it was heavy). sAlert will work without effects as well. You can add as many effect packages as you want. Config and usage are the same.
 
 #### Changelog
 
-..see [CHANGELOG.md](https://github.com/juliancwirko/meteor-s-alert/blob/master/CHANGELOG.md) file
+..see [CHANGELOG.md](https://github.com/vlasky/meteor-blaze-s-alert/blob/master/CHANGELOG.md) file
 
 #### License
 MIT

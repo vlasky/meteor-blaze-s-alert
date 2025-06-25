@@ -1,6 +1,22 @@
 ### Changelog
 
-#### v3.1.2
+#### v3.3.0 (vlasky:blaze-s-alert fork)
+- Forked from juliancwirko:s-alert v3.1.2 (skipped v3.2.0 due to bugs)
+- Added Meteor 3.0 support while maintaining Meteor 2.0 compatibility
+- Renamed package from `s-alert` to `blaze-s-alert` to clarify Blaze-specific implementation
+- Consolidated all effect CSS files into main package for convenience:
+  - Includes scale, slide, genie, jelly, flip, bouncyflip, and stackslide effects
+  - No need to install separate effect packages anymore
+- Added `onOpen` callback function:
+  - Called when alert DOM is rendered and ready
+  - Receives alert data object with DOM id accessible as `data._id`
+  - Useful for adding event handlers, initializing components, analytics, etc.
+- Enhanced `onClose` callback function:
+  - Now receives alert data object as parameter for easier custom closing behavior
+  - Allows access to alert-specific information when implementing cleanup or tracking
+- Updated package name in tests and documentation
+
+#### v3.1.2 (last version from juliancwirko:s-alert)
 - separation of positions logic - there was a problems when you wanted use many alerts positions at the same time [#35](https://github.com/juliancwirko/meteor-s-alert/issues/35)
 
 #### v3.1.1

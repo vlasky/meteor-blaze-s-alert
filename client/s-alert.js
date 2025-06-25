@@ -16,8 +16,8 @@ var conditionSet = function (self, msg, condition, customSettings) {
         settings = _.extend(settings, self.settings, {message: msg}, {condition: condition}, customSettings);
     }
     currentEffect = settings && settings.effect;
-    if (_.contains(effects, currentEffect) && !Package['juliancwirko:s-alert-' + currentEffect] && typeof console !== 'undefined') {
-        console.info('Install "' + currentEffect + '" effect by running "meteor add juliancwirko:s-alert-' + currentEffect + '"');
+    if (currentEffect && !_.contains(effects, currentEffect) && typeof console !== 'undefined') {
+        console.info('Invalid effect "' + currentEffect + '" specified');
     }
     if (_.isObject(settings) && !_.isEmpty(settings)) {
         sAlertId = sAlert.collection.insert(settings);
@@ -28,8 +28,17 @@ var conditionSet = function (self, msg, condition, customSettings) {
 var EVENTS = 'webkitAnimationEnd oAnimationEnd animationEnd msAnimationEnd animationend';
 var sAlertClose = function (alertId) {
     var closingTimeout;
+    var onClose;
+    var alertObj;
+    var invokeOnCloseCb = function (data) {
+        // invoke onClose callback
+        if (onClose && _.isFunction(onClose)) {
+            onClose(data);
+        }
+    };
     if (document.hidden || document.webkitHidden || !$('#' + alertId).hasClass('s-alert-is-effect')) {
         sAlert.collection.remove(alertId);
+        invokeOnCloseCb(alertObj);
     } else {
         $('.s-alert-box#' + alertId).removeClass('s-alert-show');
         closingTimeout = Meteor.setTimeout(function () {
@@ -65,7 +74,7 @@ sAlert = {
         //     limit: 3 // when fourth alert appears all previous ones are cleared
         // }
         offset: 0, // in px - will be added to first alert (bottom or top - depends of the position in config)
-        beep: false
+        beep: false,
         // beep: '/beep.mp3'  // or you can pass an object:
         // beep: {
         //     info: '/beep-info.mp3',
@@ -73,6 +82,8 @@ sAlert = {
         //     success: '/beep-success.mp3',
         //     warning: '/beep-warning.mp3'
         // }
+        onOpen: null,
+        onClose: _.noop
     },
     config: function (configObj) {
         var self = this;
@@ -83,7 +94,12 @@ sAlert = {
         }
     },
     closeAll: function () {
-        sAlert.collection.remove({});
+        sAlert.collection.find({}).forEach(function (sAlertObj) {
+            sAlert.collection.remove(sAlertObj._id);
+            if (sAlertObj.onClose && _.isFunction(sAlertObj.onClose)) {
+                sAlertObj.onClose(sAlertObj);
+            }
+        });
     },
     close: function (id) {
         if (_.isString(id)) {

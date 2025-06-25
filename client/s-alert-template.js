@@ -118,6 +118,11 @@ Template.sAlertContent.onRendered(function () {
     var data = Template.currentData();
     var sAlertTimeout = data.timeout;
     var beep = data.beep;
+    var onOpen = data.onOpen;
+
+    if (onOpen && _.isFunction(onOpen)) {
+        onOpen(data);
+    }
     // audio
     if (beep && _.isString(beep)) {
         sAlert.audio = new Audio(data.beep);
