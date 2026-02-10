@@ -1,43 +1,47 @@
-'use strict';
+import { Meteor } from 'meteor/meteor';
+import { Template } from 'meteor/templating';
+import { Blaze } from 'meteor/blaze';
+import { _ } from 'meteor/underscore';
+import { $ } from 'meteor/jquery';
 
-var getAlertData = function (currentData, sAlertPosition) {
-    var positionTop = 0;
-    var positionBottom = 0;
-    var padding = 0;
-    var alerts = {};
-    var style;
-    var sAlertBoxHTML;
-    var sAlertBox;
-    var docElement;
-    var sAlertBoxHeight;
-    var templateOverwrite = currentData && currentData.template;
-    var positionTypeTop;
-    var positionTypeBottom;
-    var stackLimit;
-    var alertsCount;
-    var checkFirst = function (type, objId) {
-        var collectionOfType = sAlertCollection.filter(function(obj) {
+import { sAlert } from './s-alert';
+
+const getAlertData = (currentData, sAlertPosition) => {
+    let positionTop = 0;
+    let positionBottom = 0;
+    let padding = 0;
+    let alerts = {};
+    let style;
+    let sAlertBoxHTML;
+    let sAlertBox;
+    let docElement;
+    let sAlertBoxHeight;
+    const templateOverwrite = currentData && currentData.template;
+    let positionTypeTop;
+    let positionTypeBottom;
+    let stackLimit;
+    let alertsCount;
+    const checkFirst = (type, objId) => {
+        const collectionOfType = sAlertCollection.filter((obj) => {
             return obj.position === type;
         });
         return collectionOfType && collectionOfType[0]._id === objId;
     };
-    var positionFunc = function (position, positionType, alert, sAlertBox) {
+    const positionFunc = (position, positionType, alert, sAlertBox) => {
         padding = alert.stack.spacing || sAlertBox.find('.s-alert-box').css(positionType);
         if (checkFirst(alert.position, alert._id) && alert.offset) {
             position = 0;
             position = position + parseInt(alert.offset);
         }
-        if (checkFirst(alert.position, alert._id) && alert.stack.spacing) {
-            position = position;
-        } else {
-            position = position + parseInt(padding);
+        if (!checkFirst(alert.position, alert._id) || !alert.stack.spacing) {
+            position = position + parseInt(String(padding));
         }
-        style = positionType + ': ' + position + 'px;';
+        style = `${positionType}: ${position}px;`;
         position = position + sAlertBoxHeight;
         return position;
     };
 
-    var query = {};
+    let query = {};
     if (sAlertPosition === 'left') {
         query = {$or: [{position: 'top-left'}, {position: 'bottom-left'}]};
     }
@@ -50,9 +54,9 @@ var getAlertData = function (currentData, sAlertPosition) {
     if (sAlertPosition === 'full-bottom') {
         query = {position: 'bottom'};
     }
-    var sAlertCollection = sAlert.collection.find(query).fetch();
+    const sAlertCollection = sAlert.collection.find(query).fetch();
 
-    return sAlertCollection.map(function (alert) {
+    return sAlertCollection.map((alert) => {
         positionTypeTop = alert.position && /top/g.test(alert.position);
         positionTypeBottom = alert.position && /bottom/g.test(alert.position);
         if (alert.stack) {
@@ -81,16 +85,16 @@ var getAlertData = function (currentData, sAlertPosition) {
             }
             sAlertBox.remove();
             if (sAlertPosition === 'left') {
-                style = style + 'left: ' + (alert.stack.spacing || sAlertBox.find('.s-alert-box').css('left')) + 'px;';
+                style = `${style}left: ${alert.stack.spacing || sAlertBox.find('.s-alert-box').css('left')}px;`;
             }
             if (sAlertPosition === 'right') {
-                style = style + 'right: ' + (alert.stack.spacing || sAlertBox.find('.s-alert-box').css('right')) + 'px;';
+                style = `${style}right: ${alert.stack.spacing || sAlertBox.find('.s-alert-box').css('right')}px;`;
             }
             alerts = _.extend(alert, {boxPosition: style});
         } else if (alert.offset && positionTypeTop) {
-            alerts = _.extend(alert, {boxPosition: 'top: ' + parseInt(alert.offset) + 'px;'});
+            alerts = _.extend(alert, {boxPosition: `top: ${parseInt(alert.offset)}px;`});
         } else if (alert.offset && positionTypeBottom) {
-            alerts = _.extend(alert, {boxPosition: 'bottom: ' + parseInt(alert.offset) + 'px;'});
+            alerts = _.extend(alert, {boxPosition: `bottom: ${parseInt(alert.offset)}px;`});
         } else {
             alerts = alert;
         }
@@ -99,26 +103,25 @@ var getAlertData = function (currentData, sAlertPosition) {
 };
 
 Template.sAlert.helpers({
-    sAlertDataLeft: function () {
+    sAlertDataLeft() {
         return getAlertData(Template.currentData(), 'left');
     },
-    sAlertDataRight: function () {
+    sAlertDataRight() {
         return getAlertData(Template.currentData(), 'right');
     },
-    sAlertDataFullTop: function () {
+    sAlertDataFullTop() {
         return getAlertData(Template.currentData(), 'full-top');
     },
-    sAlertDataFullBottom: function () {
+    sAlertDataFullBottom() {
         return getAlertData(Template.currentData(), 'full-bottom');
     }
 });
 
 Template.sAlertContent.onRendered(function () {
-    var tmpl = this;
-    var data = Template.currentData();
-    var sAlertTimeout = data.timeout;
-    var beep = data.beep;
-    var onOpen = data.onOpen;
+    const data = Template.currentData();
+    let sAlertTimeout = data.timeout;
+    const beep = data.beep;
+    const onOpen = data.onOpen;
 
     if (onOpen && _.isFunction(onOpen)) {
         onOpen(data);
@@ -151,10 +154,10 @@ Template.sAlertContent.onRendered(function () {
     }
     if (sAlertTimeout && sAlertTimeout !== 'none') {
         sAlertTimeout = parseInt(sAlertTimeout);
-        if (tmpl.sAlertCloseTimeout) {
-            Meteor.clearTimeout(tmpl.sAlertCloseTimeout);
+        if (this.sAlertCloseTimeout) {
+            Meteor.clearTimeout(this.sAlertCloseTimeout);
         }
-        tmpl.sAlertCloseTimeout = Meteor.setTimeout(function () {
+        this.sAlertCloseTimeout = Meteor.setTimeout(() => {
             sAlert.close(data._id);
         }, sAlertTimeout);
     }
@@ -166,7 +169,7 @@ Template.sAlertContent.onDestroyed(function () {
 });
 
 Template.sAlertContent.events({
-    'click .s-alert-close': function (e, tmpl) {
+    'click .s-alert-close'(e, tmpl) {
         e.preventDefault();
         Meteor.clearTimeout(tmpl.sAlertCloseTimeout);
         sAlert.close(this._id);
@@ -174,8 +177,8 @@ Template.sAlertContent.events({
 });
 
 Template.sAlertContent.helpers({
-    isHtml: function () {
-        var data = Template.currentData();
+    isHtml() {
+        const data = Template.currentData();
         return data && data.html;
     }
 });

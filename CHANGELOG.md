@@ -1,5 +1,10 @@
 ### Changelog
 
+#### v3.4.0 (vlasky:blaze-s-alert fork)
+- Added ES module entry point and exports for `sAlert`
+- Added TypeScript definitions (`index.d.ts`)
+- Switched to `api.mainModule` for modern Meteor module loading
+
 #### v3.3.0 (vlasky:blaze-s-alert fork)
 - Forked from juliancwirko:s-alert v3.1.2 (skipped v3.2.0 due to bugs)
 - Added Meteor 3.0 support while maintaining Meteor 2.0 compatibility

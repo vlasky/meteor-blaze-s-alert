@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "checkJs": true,
+    "allowJs": true,
+    "noEmit": true,
+    "target": "ES2020",
+    "module": "ESNext",
+    "moduleResolution": "node",
+    "skipLibCheck": true,
+    "baseUrl": ".",
+    "paths": {
+      "meteor/vlasky:blaze-s-alert": ["./index.d.ts"]
+    },
+    "types": ["meteor", "node", "mocha", "chai"],
+    "lib": ["ES2020", "DOM"]
+  },
+  "include": ["client/**/*.js", "tests/**/*.js", "index.d.ts", "types/**/*.d.ts"],
+  "exclude": ["node_modules", ".npm", ".meteor"]
+}

@@ -3,7 +3,7 @@
 **This is a fork of [juliancwirko:s-alert](https://github.com/juliancwirko/meteor-s-alert) v3.1.2**
 
 #### Fork Information
-- **Package**: `vlasky:blaze-s-alert` v3.3.0
+- **Package**: `vlasky:blaze-s-alert` v3.4.0
 - **GitHub**: [https://github.com/vlasky/meteor-blaze-s-alert/](https://github.com/vlasky/meteor-blaze-s-alert/)
 - **Purpose**: Add Meteor 3.0 support while maintaining Meteor 2.0 compatibility
 - **Name change**: From `s-alert` to `blaze-s-alert` to clarify this is for Blaze templating (Meteor now supports multiple view layers)
@@ -30,6 +30,14 @@ Then place `{{> sAlert}}` in your main template. Recomended usage:
     {{> sAlert}}
 </body>
 ```
+
+If you're using ES modules, you can import the API:
+
+```js
+import { sAlert } from 'meteor/vlasky:blaze-s-alert';
+```
+
+TypeScript users get typings automatically via `index.d.ts` (no extra setup needed).
 
 #### sAlert configuration
 

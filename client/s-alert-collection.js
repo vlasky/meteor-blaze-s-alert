@@ -1,4 +1,6 @@
-'use strict';
+import { Mongo } from 'meteor/mongo';
 
-// only client side collections for now..
-sAlert.collection = new Mongo.Collection(null);
+// Only client side collections for now.
+const sAlertCollection = new Mongo.Collection(null);
+
+export { sAlertCollection };

@@ -1,11 +1,15 @@
-'use strict';
+import { Meteor } from 'meteor/meteor';
+import { _ } from 'meteor/underscore';
+import { $ } from 'meteor/jquery';
+
+import { sAlertCollection } from './s-alert-collection';
 
 // helper functions
-var conditionSet = function (self, msg, condition, customSettings) {
-    var settings = {};
-    var effects = ['jelly', 'genie', 'stackslide', 'scale', 'slide', 'flip', 'bouncyflip'];
-    var currentEffect;
-    var sAlertId;
+const conditionSet = (self, msg, condition, customSettings) => {
+    let settings = {};
+    const effects = ['jelly', 'genie', 'stackslide', 'scale', 'slide', 'flip', 'bouncyflip'];
+    let currentEffect;
+    let sAlertId;
     if (!_.isObject(customSettings)) {
         customSettings = {};
     }
@@ -17,7 +21,7 @@ var conditionSet = function (self, msg, condition, customSettings) {
     }
     currentEffect = settings && settings.effect;
     if (currentEffect && !_.contains(effects, currentEffect) && typeof console !== 'undefined') {
-        console.info('Invalid effect "' + currentEffect + '" specified');
+        console.info(`Invalid effect "${currentEffect}" specified`);
     }
     if (_.isObject(settings) && !_.isEmpty(settings)) {
         sAlertId = sAlert.collection.insert(settings);
@@ -25,28 +29,28 @@ var conditionSet = function (self, msg, condition, customSettings) {
     return sAlertId;
 };
 
-var EVENTS = 'webkitAnimationEnd oAnimationEnd animationEnd msAnimationEnd animationend';
-var sAlertClose = function (alertId) {
-    var closingTimeout;
-    var onClose;
-    var alertObj;
-    var invokeOnCloseCb = function (data) {
+const EVENTS = 'webkitAnimationEnd oAnimationEnd animationEnd msAnimationEnd animationend';
+const sAlertClose = (alertId) => {
+    let closingTimeout;
+    const alertObj = sAlert.collection.findOne(alertId);
+    const onClose = alertObj && alertObj.onClose;
+    const invokeOnCloseCb = (data) => {
         // invoke onClose callback
         if (onClose && _.isFunction(onClose)) {
             onClose(data);
         }
     };
-    if (document.hidden || document.webkitHidden || !$('#' + alertId).hasClass('s-alert-is-effect')) {
+    if (document.hidden || document.webkitHidden || !$(`#${alertId}`).hasClass('s-alert-is-effect')) {
         sAlert.collection.remove(alertId);
         invokeOnCloseCb(alertObj);
     } else {
-        $('.s-alert-box#' + alertId).removeClass('s-alert-show');
-        closingTimeout = Meteor.setTimeout(function () {
-            $('.s-alert-box#' + alertId).addClass('s-alert-hide');
+        $(`.s-alert-box#${alertId}`).removeClass('s-alert-show');
+        closingTimeout = Meteor.setTimeout(() => {
+            $(`.s-alert-box#${alertId}`).addClass('s-alert-hide');
         }, 100);
-        $('.s-alert-box#' + alertId).off(EVENTS);
-        $('.s-alert-box#' + alertId).on(EVENTS, function () {
-            $(this).hide();
+        $(`.s-alert-box#${alertId}`).off(EVENTS);
+        $(`.s-alert-box#${alertId}`).on(EVENTS, () => {
+            $(`.s-alert-box#${alertId}`).hide();
             sAlert.collection.remove(alertId);
             Meteor.clearTimeout(closingTimeout);
         });
@@ -60,7 +64,7 @@ var sAlertClose = function (alertId) {
 };
 
 // sAlert object
-sAlert = {
+const sAlert = {
     settings: {
         effect: '',
         position: 'top-right',
@@ -85,55 +89,61 @@ sAlert = {
         onOpen: null,
         onClose: _.noop
     },
-    config: function (configObj) {
-        var self = this;
+    collection: sAlertCollection,
+    config(configObj) {
         if (_.isObject(configObj)) {
-            self.settings = _.extend(self.settings, configObj);
+            this.settings = _.extend(this.settings, configObj);
         } else {
             throw new Meteor.Error(400, 'Config must be an object!');
         }
     },
-    closeAll: function () {
-        sAlert.collection.find({}).forEach(function (sAlertObj) {
+    closeAll() {
+        sAlert.collection.find({}).forEach((sAlertObj) => {
             sAlert.collection.remove(sAlertObj._id);
             if (sAlertObj.onClose && _.isFunction(sAlertObj.onClose)) {
                 sAlertObj.onClose(sAlertObj);
             }
         });
     },
-    close: function (id) {
+    close(id) {
         if (_.isString(id)) {
             sAlertClose(id);
         }
     },
-    info: function (msg, customSettings) {
+    info(msg, customSettings) {
         return conditionSet(this, msg, 'info', customSettings);
     },
-    error: function (msg, customSettings) {
+    error(msg, customSettings) {
         return conditionSet(this, msg, 'error', customSettings);
     },
-    success: function (msg, customSettings) {
+    success(msg, customSettings) {
         return conditionSet(this, msg, 'success', customSettings);
     },
-    warning: function (msg, customSettings) {
+    warning(msg, customSettings) {
         return conditionSet(this, msg, 'warning', customSettings);
     }
 };
 
+// Backwards compatibility for global usage.
+globalThis.sAlert = sAlert;
+
+export { sAlert };
+export default sAlert;
+
 // routers clean
-Meteor.startup(function () {
+Meteor.startup(() => {
     if (typeof Iron !== 'undefined' && typeof Router !== 'undefined') {
-        Router.onStop(function () {
+        Router.onStop(() => {
             sAlert.collection.remove({onRouteClose: true});
         });
     }
     if (typeof FlowRouter !== 'undefined' && _.isObject(FlowRouter.triggers)) {
-        FlowRouter.triggers.enter([function () {
+        FlowRouter.triggers.enter([() => {
             sAlert.collection.remove({onRouteClose: true});
         }]);
     }
     if (typeof FlowRouter !== 'undefined' && !_.isObject(FlowRouter.triggers)) {
-        FlowRouter.middleware(function (path, next) {
+        FlowRouter.middleware((path, next) => {
             sAlert.collection.remove({onRouteClose: true});
             next();
         });
